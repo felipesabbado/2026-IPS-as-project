@@ -1,7 +1,7 @@
 export class VideoController {
-    constructor(uploadVideoUseCase, videoRepository) {
+    constructor(uploadVideoUseCase, listVideosUseCase) {
         this.uploadVideoUseCase = uploadVideoUseCase;
-        this.videoRepository = videoRepository;
+        this.listVideosUseCase = listVideosUseCase;
     }
 
     async upload(req, res) {
@@ -15,7 +15,16 @@ export class VideoController {
     }
 
     async list(req, res) {
-        const videos = await this.videoRepository.findAll();
-        res.json(videos);
+        try {
+            const videos = await this.listVideosUseCase.execute();
+            
+            return res.status(200).json(videos);
+        } catch (error) {
+            console.error("[Erro no Controller (List)]:", error.message)
+            return res.status(500).json({
+                error: "Internal Server Error",
+                message: error.message
+            })
+        }
     }
 }
