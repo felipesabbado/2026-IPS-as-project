@@ -9,6 +9,10 @@ export class Video {
         this.createdAt = new Date();
     }
 
+    startProcessing() {
+        this.status = 'PROCESSING';
+    }
+
     publish() {
         this.status = 'PUBLISHED';
     }
