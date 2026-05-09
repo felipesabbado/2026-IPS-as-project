@@ -3,11 +3,13 @@ import { Video } from './Video.js';
 export class UploadVideoUseCase {
     /**
      * @param {import('../ports/VideoRepository')} videoRepository - Porta de persistência
-     * @param {import('../../../shared/ports/QueuePort')} queuePort - Porta de mensageria 
+     * @param {import('../../../shared/ports/QueuePort')} queuePort - Porta de mensageria
+     * @param {import('../../../../shared/ports/LoggerPort')} loggerPort 
      */
-    constructor(videoRepository, queuePort) {
+    constructor(videoRepository, queuePort, loggerPort) {
         this.videoRepository = videoRepository;
         this.queuePort = queuePort;
+        this.loggerPort = loggerPort;
     }
 
     /**
@@ -18,7 +20,10 @@ export class UploadVideoUseCase {
         // Se não for fornecido pelo controller, geramos um provisório.
         const correlationId = input.correlationId || `req-${Date.now()}`;
 
-        console.log(`[UploadUseCase] [${correlationId}] Iniciando upload do vídeo: ${input.title}`);
+        this.loggerPort.info('[UploadUseCase] Iniciando upload do vídeo', {
+            correlationId,
+            title: input.title
+        })
 
         // Regra de Negócio: Título é obrigatório.
         if (!input.title) {
@@ -36,7 +41,12 @@ export class UploadVideoUseCase {
         // Persistência dos dados de forma síncrona.
         await this.videoRepository.save(video);
 
-        console.log(`[UploadUseCase] [${correlationId}] Vídeo guardado no repositório com estado PENDING.`);
+        this.loggerPort.info('[UploadUseCase] Vídeo guardado no repositório', {
+            correlationId,
+            videoId: video.id,
+            title: video.title,
+            status: 'PENDING'
+        })
 
         // Integração Assíncrona (Padrão Web-Queue-Worker).
         // Publicamos uma mensagem na fila e não esperamos que o processamento acabe.

@@ -3,21 +3,28 @@ export class ProcessVideoUseCase {
     /**
      * @param {import('../ports/VideoRepository')} videoRepository
      * @param {import('../../../shared/ports/EventBusPort')} eventBusPort
+     * @param {import('../../../shared/ports/LoggerPort')} loggerPort
      */
-    constructor(videoRepository, eventBusPort) {
+    constructor(videoRepository, eventBusPort, loggerPort) {
         this.videoRepository = videoRepository;
         this.eventBusPort = eventBusPort;
+        this.loggerPort = loggerPort;
     }
 
     /**
      * @param {Object} input - DTO contendo videoId e correlationId
      */
     async execute({ videoId, correlationId }) {
-        console.log(`\n[ProcessVideoUseCase] [${correlationId}] Iniciando transcodificação do vídeo ${videoId}...`);
+        this.loggerPort.info('[ProcessVideoUseCase] Iniciando transcodificação do vídeo', { 
+            correlationId, 
+            videoId, 
+            action: 'START_PROCESSING' 
+        });
 
         // Recuperar a entidade do repositório
         const video = await this.videoRepository.findById(videoId);
         if (!video) {
+            this.loggerPort.error('[ProcessVideoUseCase] Vídeo não encontrado no repositório', { correlationId, videoId });
             throw new Error(`Vídeo com ID ${videoId} não encontrado no repositório.`);
         }
 
@@ -39,15 +46,17 @@ export class ProcessVideoUseCase {
         // Guardar o novo estado no repositório
         await this.videoRepository.save(video);
 
-        console.log(`[ProcessVideoUseCase] [${correlationId}] Vídeo ${videoId} processado e publicado com sucesso!`);
+        this.loggerPort.info('[ProcessVideoUseCase] Vídeo processado e publicado', { 
+            correlationId, 
+            videoId, 
+            qualities: video.qualities 
+        });
 
-        // EVENT-DRIVEN: Disparar o evento de domínio
-        // Não esperamos o processamento de quem escuta (é disparado e esquecido).
         this.eventBusPort.publish('VideoPublished', {
+            correlationId,
             videoId: video.id,
             title: video.title,
-            author: video.author,
-            correlationId: correlationId // Rastreabilidade mantida (Requisito de Observabilidade)
+            author: video.author
         });
     }
 }

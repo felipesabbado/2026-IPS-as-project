@@ -1,6 +1,7 @@
 import express from 'express';
 
 // Shared
+import { StructuredLoggerAdapter } from './shared/adapters/driven/StructuredLoggerAdapter.js';
 import { InMemoryQueueAdapter } from './shared/adapters/driven/InMemoryQueueAdapter.js';
 import { InMemoryEventBusAdapter } from './shared/adapters/driven/InMemoryEventBusAdapter.js';
 
@@ -32,6 +33,7 @@ app.use(express.json());
 // --- Dependency Injection (Composition Root) ---
 
 // Instanciação da Infraestrutura Partilhada
+const logger = new StructuredLoggerAdapter();
 const queueAdapter = new InMemoryQueueAdapter();
 const eventBusAdapter = new InMemoryEventBusAdapter();
 
@@ -39,29 +41,29 @@ const eventBusAdapter = new InMemoryEventBusAdapter();
 const videoRepo = new InMemoryVideoRepository();
 
 // Use Cases (Video)
-const uploadVideoUC = new UploadVideoUseCase(videoRepo, queueAdapter);
+const uploadVideoUC = new UploadVideoUseCase(videoRepo, queueAdapter, logger);
 const listVideosUC = new ListVideosUseCase(videoRepo);
-const processVideoUC = new ProcessVideoUseCase(videoRepo, eventBusAdapter);
+const processVideoUC = new ProcessVideoUseCase(videoRepo, eventBusAdapter, logger);
 
 // Input Adapters (HTTP & Worker)
-const videoController = new VideoController(uploadVideoUC, listVideosUC);
-const videoWorker = new VideoWorker(queueAdapter, processVideoUC);
+const videoController = new VideoController(uploadVideoUC, listVideosUC, logger);
+const videoWorker = new VideoWorker(queueAdapter, processVideoUC, logger);
 
 // Engagement Wiring
 const engagementRepo = new InMemoryEngagementRepository();
 
 // Use Cases (Engagement)
-const registerViewUC = new RegisterViewUseCase(engagementRepo);
+const initializeVideoStatsUC = new InitializeVideoStatsUseCase(engagementRepo, logger);
 const listViewStatsUC = new ListViewStatsUseCase(engagementRepo);
-const initializeVideoStatsUC = new InitializeVideoStatsUseCase(engagementRepo);
+const registerViewUC = new RegisterViewUseCase(engagementRepo, logger);
 
 // Input Adapters (Engagement)
-const engagementController = new EngagementController(registerViewUC, listViewStatsUC);
-const engagementConsumer = new EngagementEventConsumer(eventBusAdapter, initializeVideoStatsUC);
+const engagementController = new EngagementController(registerViewUC, listViewStatsUC, logger);
+const engagementConsumer = new EngagementEventConsumer(eventBusAdapter, initializeVideoStatsUC, logger);
 
 // Notifications Wiring
-const sendNotificationUC = new SendNotificationUseCase();
-const notificationConsumer = new NotificationEventConsumer(eventBusAdapter, sendNotificationUC);
+const sendNotificationUC = new SendNotificationUseCase(logger);
+const notificationConsumer = new NotificationEventConsumer(eventBusAdapter, sendNotificationUC, logger);
 
 // --- Inicialização de Background Workers e Consumers ---
 videoWorker.start();
@@ -84,7 +86,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`
     🚀 ProtoTube Server Ready!
-    Mode: Monolith (Hexagonal Architecture)
+    Mode: Async (Hexagonal Architecture)
     Port: ${PORT}
     
     Available Endpoints:

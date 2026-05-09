@@ -1,11 +1,13 @@
 export class EngagementEventConsumer {
     /**
      * @param {import('../../../../shared/ports/EventBusPort')} eventBusPort 
-     * @param {import('../../domain/InitializeVideoStatsUseCase')} initializeVideoStatsUseCase 
+     * @param {import('../../domain/InitializeVideoStatsUseCase')} initializeVideoStatsUseCase
+     * @param {import('../../../../shared/adapters/driven/StructuredLoggerAdapter.js')} loggerPort
      */
-    constructor(eventBusPort, initializeVideoStatsUseCase) {
+    constructor(eventBusPort, initializeVideoStatsUseCase, loggerPort) {
         this.eventBusPort = eventBusPort;
         this.initializeVideoStatsUseCase = initializeVideoStatsUseCase;
+        this.loggerPort = loggerPort;
     }
 
     /**
@@ -22,7 +24,10 @@ export class EngagementEventConsumer {
                 // Delega a tarefa para o Caso de Uso
                 await this.initializeVideoStatsUseCase.execute({ videoId, correlationId });
             } catch (error) {
-                console.error(`[EngagementConsumer] [${correlationId}] Falha ao inicializar stats para ${videoId}:`, error.message);
+                this.loggerPort.error('[EngagementConsumer] Falha ao inicializar stats', {
+                    correlationId,
+                    videoId
+                })
             }
         });
     }
