@@ -6,11 +6,17 @@ export class RegisterViewUseCase {
     }
 
     async execute(videoId) {
-        let viewCount = await this.engagementRepository.findByVideoId(videoId);
+        let data = await this.engagementRepository.findByVideoId(videoId);
 
-        if (!viewCount) {
-            viewCount = new ViewCount({ videoId });
+        if (!data) {
+            throw new Error(`Estatísticas para o vídeo ${videoId} não encontradas.`);
         }
+
+        const viewCount = new ViewCount({
+            videoId: data.videoId,
+            views: data.views,
+            createdAt: data.createdAt
+        });
 
         viewCount.increment();
         await this.engagementRepository.save(viewCount);

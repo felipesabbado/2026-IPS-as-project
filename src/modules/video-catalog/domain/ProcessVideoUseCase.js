@@ -2,9 +2,11 @@
 export class ProcessVideoUseCase {
     /**
      * @param {import('../ports/VideoRepository')} videoRepository
+     * @param {import('../../../shared/ports/EventBusPort')} eventBusPort
      */
-    constructor(videoRepository) {
+    constructor(videoRepository, eventBusPort) {
         this.videoRepository = videoRepository;
+        this.eventBusPort = eventBusPort;
     }
 
     /**
@@ -38,5 +40,14 @@ export class ProcessVideoUseCase {
         await this.videoRepository.save(video);
 
         console.log(`[ProcessVideoUseCase] [${correlationId}] Vídeo ${videoId} processado e publicado com sucesso!`);
+
+        // EVENT-DRIVEN: Disparar o evento de domínio
+        // Não esperamos o processamento de quem escuta (é disparado e esquecido).
+        this.eventBusPort.publish('VideoPublished', {
+            videoId: video.id,
+            title: video.title,
+            author: video.author,
+            correlationId: correlationId // Rastreabilidade mantida (Requisito de Observabilidade)
+        });
     }
 }
