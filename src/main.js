@@ -34,8 +34,8 @@ app.use(express.json());
 
 // Instanciação da Infraestrutura Partilhada
 const logger = new StructuredLoggerAdapter();
-const queueAdapter = new InMemoryQueueAdapter();
-const eventBusAdapter = new InMemoryEventBusAdapter();
+const queueAdapter = new InMemoryQueueAdapter(logger);
+const eventBusAdapter = new InMemoryEventBusAdapter(logger);
 
 // Video Catalog Wiring
 const videoRepo = new InMemoryVideoRepository();

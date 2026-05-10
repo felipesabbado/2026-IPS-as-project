@@ -14,7 +14,8 @@ export class EngagementEventConsumer {
      * Inicia a escuta de eventos. Deve ser chamado na inicialização do sistema.
      */
     start() {
-        console.log("[EngagementConsumer] A escutar eventos do sistema...");
+        // console.log("[EngagementConsumer] A escutar eventos do sistema...");
+        this.loggerPort.info('[EngagementConsumer] A escutar eventos do sistema...', { })
 
         this.eventBusPort.subscribe('VideoPublished', async (eventData) => {
             // Extrai os dados enviados pelo módulo Video Catalog
