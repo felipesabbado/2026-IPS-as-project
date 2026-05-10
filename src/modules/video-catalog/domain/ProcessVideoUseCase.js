@@ -21,6 +21,15 @@ export class ProcessVideoUseCase {
             action: 'START_PROCESSING' 
         });
 
+        // --- INÍCIO DA INJEÇÃO DE ERRO (REQUISITO DA FASE 2) ---
+        // Simula uma falha de rede/timeout 70% das vezes
+        const isUnstable = Math.random() < 0.7; 
+        if (isUnstable) {
+            this.loggerPort.warn('Simulação de falha: Serviço de transcodificação indisponível.', { correlationId });
+            throw new Error('Timeout de ligação ao motor de vídeo externo (Simulação)');
+        }
+        // --- FIM DA INJEÇÃO DE ERRO ---
+
         // Recuperar a entidade do repositório
         const video = await this.videoRepository.findById(videoId);
         if (!video) {

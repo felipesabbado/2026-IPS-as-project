@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/felipesabbado/2026-IPS-as-project#readme",
   "dependencies": {
+    "async-retry": "^1.3.3",
     "express": "^5.2.1"
   }
 }
