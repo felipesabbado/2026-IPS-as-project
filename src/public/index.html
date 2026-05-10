@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>ProtoTube POC - Fase 2</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .status-pending { color: #f39c12; font-weight: bold; }
+        .status-processed { color: #27ae60; font-weight: bold; }
+        .correlation-id { font-family: monospace; font-size: 0.85em; color: #666; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 12px; text-align: left; }
+        .error-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ProtoTube Management</h1>
+        <p><em>Fase 2: Assincronismo e Observabilidade</em></p>
+        
+        <div id="upload-form">
+            <input type="text" id="videoTitle" placeholder="Título do Vídeo" style="padding: 8px; width: 250px;">
+            <button onclick="uploadVideo(false)" style="padding: 8px 15px; background: #3498db; color: white; border: none; cursor: pointer;">Upload Normal</button>
+        </div>
+<div id="player-section" style="display:none; background: #222; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 2px solid #444;">
+    <h3 id="playing-title">A reproduzir...</h3>
+    <div style="background: #000; height: 120px; display: flex; align-items: center; justify-content: center; border: 1px solid #555; margin: 10px 0;">
+        <span style="font-size: 50px;">🎬</span>
+    </div>
+    <p><small>O pedido de visualização está a ser enviado para o Módulo de Engagement.</small></p>
+    <button onclick="document.getElementById('player-section').style.display='none'" style="background: #555; color: white; border: none; padding: 5px 15px; cursor: pointer;">Fechar Player</button>
+</div>
+
+       <table>
+    <thead>
+        <tr>
+            <th>Vídeo</th>
+            <th>Estado</th>
+            <th>Ações</th>
+            <th>Stats</th>
+            <th>Correlation ID</th>
+        </tr>
+    </thead>
+    <tbody id="videoList"></tbody>
+</table>
+
+<div class="container" style="margin-top: 40px;">
+    <h2>Logs Dashboard</h2>
+    <div style="background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; max-height: 300px; overflow-y: auto;">
+        <table style="width: 100%; font-family: monospace; font-size: 0.85em; border: none;">
+            <thead>
+                <tr style="color: #569cd6; border-bottom: 1px solid #333;">
+                    <th>Timestamp</th>
+                    <th>Level</th>
+                    <th>Correlation ID</th>
+                    <th>Mensagem</th>
+                </tr>
+            </thead>
+            <tbody id="logConsole"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="statsModal" style="display:none; position:fixed; top:20%; left:30%; background:white; border:2px solid #333; padding:20px; z-index:100;">
+    <h3> Estatísticas do Vídeo</h3>
+    <p id="statsContent"></p>
+    <button onclick="document.getElementById('statsModal').style.display='none'">Fechar</button>
+</div>
+
+    <script src="app.js"></script>
+</body>
+</html>
