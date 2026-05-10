@@ -7,6 +7,7 @@ import { InMemoryEventBusAdapter } from './shared/adapters/driven/InMemoryEventB
 
 // Video Catalog Module
 import { UploadVideoUseCase } from './modules/video-catalog/domain/UploadVideoUseCase.js';
+import { GetVideoByIdUseCase } from './modules/video-catalog/domain/GetVideoByIdUseCase.js';
 import { ListVideosUseCase } from './modules/video-catalog/domain/ListVideosUseCase.js';
 import { ProcessVideoUseCase } from './modules/video-catalog/domain/ProcessVideoUseCase.js';
 import { InMemoryVideoRepository } from './modules/video-catalog/adapters/driven/InMemoryVideoRepository.js';
@@ -39,7 +40,7 @@ const app = express();
 app.use(express.json());
 
 // Servir ficheiros estáticos da pasta 'public'
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'modules/public')));
 
 
 // --- Dependency Injection (Composition Root) ---
@@ -56,9 +57,10 @@ const videoRepo = new InMemoryVideoRepository();
 const uploadVideoUC = new UploadVideoUseCase(videoRepo, queueAdapter, logger);
 const listVideosUC = new ListVideosUseCase(videoRepo);
 const processVideoUC = new ProcessVideoUseCase(videoRepo, eventBusAdapter, logger);
+const getVideoUC = new GetVideoByIdUseCase(videoRepo, logger);
 
 // Input Adapters (HTTP & Worker)
-const videoController = new VideoController(uploadVideoUC, listVideosUC, logger);
+const videoController = new VideoController(uploadVideoUC, listVideosUC, logger, getVideoUC);
 const videoWorker = new VideoWorker(queueAdapter, processVideoUC, logger);
 
 // Engagement Wiring
@@ -107,9 +109,10 @@ app.listen(PORT, () => {
     Port: ${PORT}
     
     Available Endpoints:
-    - POST /videos         : Upload a new video
-    - GET  /videos         : List all videos
-    - POST /videos/:id/view : Register a view for a video
-    - GET  /videos/:id/stats: Get view statistics
+    - POST /videos           : Upload a new video
+    - GET  /videos           : List all videos
+    - GET  /videos/:id       : Get video by ID
+    - POST /videos/:id/view  : Register a view for a video
+    - GET  /videos/:id/stats : Get view statistics
     `);
 });

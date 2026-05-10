@@ -4,10 +4,11 @@ export class VideoController {
      * @param {import('../../domain/ListVideosUseCase')} listVideosUseCase 
      * @param {import('../../../../shared/ports/LoggerPort')} loggerPort 
      */
-    constructor(uploadVideoUseCase, listVideosUseCase, loggerPort) {
+    constructor(uploadVideoUseCase, listVideosUseCase, loggerPort, getVideoUseCase) {
         this.uploadVideoUseCase = uploadVideoUseCase;
         this.listVideosUseCase = listVideosUseCase;
         this.loggerPort = loggerPort;
+        this.getVideoUseCase = getVideoUseCase;
     }
 
     async upload(req, res) {
@@ -61,6 +62,29 @@ export class VideoController {
                 error: "Internal Server Error",
                 message: error.message
             });
+        }
+    }
+
+    async getVideo(req, res) {
+        const correlationId = req.headers['x-correlation-id'] || `req-${Date.now()}`;
+        const { videoId } = req.params; // Extrai o ID do URL
+
+        try {
+            const video = await this.getVideoUseCase.execute({ 
+                videoId: videoId, 
+                correlationId 
+            });
+            
+            return res.status(200).json({ data: video });
+
+        } catch (error) {
+            // Se o erro for o que definimos no Caso de Uso, devolvemos 404 Not Found
+            if (error.message === 'VideoNotFound') {
+                return res.status(404).json({ error: "Vídeo não encontrado." });
+            }
+
+            console.error("\n[Erro Detalhado no Controller]:", error);
+            return res.status(500).json({ error: "Erro interno do servidor." });
         }
     }
 }

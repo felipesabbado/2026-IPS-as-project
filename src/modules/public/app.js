@@ -49,7 +49,11 @@ async function loadVideos() {
 // POST /videos - Upload de um novo vídeo
 async function uploadVideo(forceError) {
     const titleInput = document.getElementById('videoTitle');
+    const authorInput = document.getElementById('videoAuthor');
+    const descriptionInput = document.getElementById('videoDescription');
     let title = titleInput.value;
+    let author = authorInput.value;
+    let description = descriptionInput.value;
 
     if (!title) return alert("Por favor, insira um título.");
 
@@ -62,10 +66,12 @@ async function uploadVideo(forceError) {
         await fetch('/videos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: title })
+            body: JSON.stringify({ title, author, description })
         });
 
         titleInput.value = '';
+        authorInput.value = '';
+        descriptionInput.value = '';
         loadVideos(); // Atualiza a lista para mostrar o vídeo como 'PENDING'
     } catch (err) {
         alert("Erro ao realizar upload.");
@@ -99,15 +105,20 @@ async function registerView(videoId, videoTitle) {
 // GET /videos/:id/stats - Obter estatísticas (Módulo Engagement)
 async function showStats(videoId) {
     try {
-        const response = await fetch(`/videos/${videoId}/stats`);
-        const stats = await response.json();
+        const responseStats = await fetch(`/videos/${videoId}/stats`);
+        const stats = await responseStats.json();
+
+        const responseVideo = await fetch(`/videos/${videoId}`);
+        const video = await responseVideo.json();
         
         const modal = document.getElementById('statsModal');
         const content = document.getElementById('statsContent');
         
         content.innerHTML = `
             <strong>Video ID:</strong> ${videoId}<br>
-            <strong>Visualizações:</strong> ${stats.viewCount || 0}<br>
+            <strong>Visualizações:</strong> ${stats.views || 0}<br>
+            <strong>Autor:</strong> ${video.data.author}<br>
+            <strong>Description:</strong> ${video.data.description}<br>
             <small>Dados processados via Event-Driven</small>
         `;
         modal.style.display = 'block';
